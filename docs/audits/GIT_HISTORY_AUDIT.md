@@ -129,7 +129,7 @@ $ git branch -vv
 | Requirement | Audit Finding | Status |
 | :--- | :--- | :--- |
 | **LICENSE file** | Dual attribution to original author Gabriel Martínez (MIT) and ayushcmd (MIT) | **COMPLIANT** |
-| **ATTRIBUTION.md** | Complete credit section citing `https://github.com/tabries/climate-tracker.git`, MapLibre GL JS (BSD-3), Three.js (MIT), Recharts (MIT), Open-Meteo (CC BY 4.0), and NASA Visible Earth textures | **COMPLIANT** |
+| **ATTRIBUTION.md** | Complete credit section citing `https://github.com/ayushcmd/air-atlas.git`, MapLibre GL JS (BSD-3), Three.js (MIT), Recharts (MIT), Open-Meteo (CC BY 4.0), and NASA Visible Earth textures | **COMPLIANT** |
 | **Redistribution Rights** | MIT license grants full rights to use, modify, merge, publish, and distribute provided copyright notice is retained | **COMPLIANT** |
 | **No False Authorship Claims** | Original code is not claimed as independently invented; upstream provenance is fully declared | **COMPLIANT** |
 

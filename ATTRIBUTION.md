@@ -8,7 +8,6 @@ This project, **Air Atlas**, is built upon the open-source **Climate & Impact Gl
 
 * **Project Title:** Climate & Impact Global Tracker
 * **Original Author:** Gabriel Martínez (`gamartinezayala@gmail.com` / GitHub: [`tabries`](https://github.com/tabries))
-* **Upstream Repository:** https://github.com/tabries/climate-tracker.git
 * **License:** MIT License (Permissive open-source license)
 * **Included Components from Upstream:**
   - Frontend React 19 architecture, design system, and UI layout

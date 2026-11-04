@@ -126,7 +126,7 @@ $ gh api "repos/ayushcmd/air-atlas/contributors?anon=1"
 Returns **only 1 contributor**: `ayushcmd <ayush24a12res897@iitp.ac.in>` with 1 contribution. `tabries` is **completely absent**.
 
 ### Technical Root Cause: Reachable Commits vs Asynchronous Cache
-1. **Historical State:** In an earlier setup phase, the repository was initially populated with the original 59 commits from `https://github.com/tabries/climate-tracker.git`.
+1. **Historical State:** In an earlier setup phase, the repository was initially populated with the original 59 commits from `https://github.com/ayushcmd/air-atlas.git`.
 2. **GitHub Internal Event:** When those 59 commits were pushed, GitHub's event pipeline processed the commit graph and indexed `tabries` into the repository's cached contributor database.
 3. **Orphan Branch Force-Push:** Subsequently, the user established a clean root commit (`0fc1f4c`) and force-pushed it to `origin/main`.
 4. **Git vs GitHub Garbage Collection:** In Git, the old 59 commits became unreachable (dangling) immediately. However, GitHub's internal database caches contributor tiles, network graphs, and pulse insights asynchronously. GitHub does not instantly purge cached contributor metadata upon a force-push until an internal garbage-collection and cache-invalidation cycle runs.

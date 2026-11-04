@@ -3,7 +3,6 @@
 **Audit Date:** 2026-11-04  
 **Project:** AIR ATLAS (Climate & Impact Global Tracker)  
 **Repository:** https://github.com/ayushcmd/air-atlas  
-**Upstream Repository:** https://github.com/tabries/climate-tracker  
 **Target Environment:** Cloudflare Pages (Frontend) + Cloudflare Workers (Backend API)  
 
 ---

@@ -31,7 +31,7 @@ export async function queryWeatherHistory(
   const { hours, pastDays } = rangeToHours(range)
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m&past_days=${pastDays}&forecast_days=1`
 
-  const res = await fetch(url)
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
   if (!res.ok) {
     throw new Error(`History weather service error: ${res.status}`)
   }
@@ -74,7 +74,7 @@ export async function queryAqiHistory(
   const { hours, pastDays } = rangeToHours(range)
   const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=european_aqi,pm2_5,pm10,ozone&past_days=${pastDays}&forecast_days=1`
 
-  const res = await fetch(url)
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
   if (!res.ok) {
     throw new Error(`History air-quality service error: ${res.status}`)
   }

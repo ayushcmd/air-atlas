@@ -7,7 +7,7 @@ export async function geocode(query: string, env: Env): Promise<GeocodeResult[]>
   if (isMapTilerAvailable(apiKey)) {
     try {
       const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${apiKey}`
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) })
       if (res.status === 401 || res.status === 403) {
         markMapTilerFailed()
       } else if (res.ok) {
@@ -32,7 +32,7 @@ export async function geocode(query: string, env: Env): Promise<GeocodeResult[]>
 
   // Open-Meteo Geocoding fallback
   const omUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`
-  const omRes = await fetch(omUrl)
+  const omRes = await fetch(omUrl, { signal: AbortSignal.timeout(8000) })
   if (!omRes.ok) {
     throw new Error(`Geocode service unavailable: ${omRes.status}`)
   }

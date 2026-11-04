@@ -17,7 +17,7 @@ export async function getAirQuality(lat: number, lon: number, env: Env): Promise
   if (isOwmAvailable(apiKey)) {
     try {
       const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) })
       if (res.status === 401) {
         markOwmFailed()
       } else if (res.ok) {
@@ -37,7 +37,7 @@ export async function getAirQuality(lat: number, lon: number, env: Env): Promise
 
   // Open-Meteo Air Quality fallback
   const omUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi,us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone`
-  const omRes = await fetch(omUrl)
+  const omRes = await fetch(omUrl, { signal: AbortSignal.timeout(8000) })
   if (!omRes.ok) {
     throw new Error(`Air quality service unavailable: ${omRes.status}`)
   }

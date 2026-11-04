@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import maplibregl from 'maplibre-gl'
+import maplibregl, { type StyleSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useWeatherStore } from '@/store/weatherStore'
 import { useWeatherLayers } from '@/components/Map/hooks/useWeatherLayers'
@@ -50,7 +50,7 @@ export function MapContainer() {
                   maxzoom: 19,
                 },
               ],
-            } as any),
+            } as StyleSpecification),
       center: [-3.7, 40.4], // Madrid
       zoom: 3,
       attributionControl: false,

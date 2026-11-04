@@ -17,17 +17,21 @@ function base64ToUint8Array(base64: string): Uint8Array {
   return bytes
 }
 
-function getCorsHeaders(env: Env, request: Request): HeadersInit {
+function getCorsHeaders(env: Env, request: Request): Record<string, string> {
   const origin = request.headers.get('Origin') || '*'
   return {
     'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Range',
     'Access-Control-Max-Age': '86400',
   }
 }
 
-function jsonResponse(data: unknown, status = 200, extraHeaders: HeadersInit = {}): Response {
+function jsonResponse(
+  data: unknown,
+  status = 200,
+  extraHeaders: Record<string, string> = {},
+): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -37,8 +41,23 @@ function jsonResponse(data: unknown, status = 200, extraHeaders: HeadersInit = {
   })
 }
 
+function isValidCoordinate(lat: number, lon: number): boolean {
+  return (
+    !isNaN(lat) &&
+    !isNaN(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  )
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx?: ExecutionContext,
+  ): Promise<Response> {
     const corsHeaders = getCorsHeaders(env, request)
 
     // Handle CORS preflight
@@ -46,8 +65,40 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders })
     }
 
+    // Only GET is supported for data endpoints
+    if (request.method !== 'GET') {
+      return jsonResponse(
+        { error: `Method ${request.method} Not Allowed` },
+        405,
+        {
+          ...corsHeaders,
+          Allow: 'GET, OPTIONS',
+        },
+      )
+    }
+
     const url = new URL(request.url)
     const path = url.pathname
+
+    // Edge cache check for cacheable endpoints
+    const cache = typeof caches !== 'undefined' && caches.default ? caches.default : null
+    const cacheKey = new Request(url.toString(), {
+      method: 'GET',
+      headers: request.headers,
+    })
+
+    if (cache && path.startsWith('/api/') && path !== '/api/usage') {
+      try {
+        const cachedResponse = await cache.match(cacheKey)
+        if (cachedResponse) {
+          const res = new Response(cachedResponse.body, cachedResponse)
+          res.headers.set('X-Edge-Cache', 'HIT')
+          return res
+        }
+      } catch {
+        // Cache miss or unsupported environment
+      }
+    }
 
     try {
       // ── GET /health ────────────────────────────────────────────────────────
@@ -55,16 +106,16 @@ export default {
         return jsonResponse(
           { status: 'ok', timestamp: new Date().toISOString() },
           200,
-          corsHeaders,
+          { ...corsHeaders, 'Cache-Control': 'no-store' },
         )
       }
 
       // ── GET /api ───────────────────────────────────────────────────────────
       if (path === '/api') {
         return jsonResponse(
-          { message: 'Climate Tracker API', version: '1.0.0' },
+          { message: 'AIR ATLAS API', version: '1.0.0', status: 'operational' },
           200,
-          corsHeaders,
+          { ...corsHeaders, 'Cache-Control': 'public, max-age=3600' },
         )
       }
 
@@ -74,15 +125,21 @@ export default {
         const lat = parseFloat(weatherMatch[1])
         const lon = parseFloat(weatherMatch[2])
 
-        if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        if (!isValidCoordinate(lat, lon)) {
           return jsonResponse({ error: 'Invalid coordinates' }, 400, corsHeaders)
         }
 
         const data = await getWeather(lat, lon, env)
-        return jsonResponse(data, 200, {
+        const response = jsonResponse(data, 200, {
           ...corsHeaders,
-          'Cache-Control': 'public, max-age=1800',
+          'Cache-Control': 'public, max-age=600',
+          'X-Edge-Cache': 'MISS',
         })
+
+        if (cache && ctx) {
+          ctx.waitUntil(cache.put(cacheKey, response.clone()))
+        }
+        return response
       }
 
       // ── GET /api/air-quality/:lat/:lon ─────────────────────────────────────
@@ -91,15 +148,21 @@ export default {
         const lat = parseFloat(aqiMatch[1])
         const lon = parseFloat(aqiMatch[2])
 
-        if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        if (!isValidCoordinate(lat, lon)) {
           return jsonResponse({ error: 'Invalid coordinates' }, 400, corsHeaders)
         }
 
         const data = await getAirQuality(lat, lon, env)
-        return jsonResponse(data, 200, {
+        const response = jsonResponse(data, 200, {
           ...corsHeaders,
-          'Cache-Control': 'public, max-age=1800',
+          'Cache-Control': 'public, max-age=600',
+          'X-Edge-Cache': 'MISS',
         })
+
+        if (cache && ctx) {
+          ctx.waitUntil(cache.put(cacheKey, response.clone()))
+        }
+        return response
       }
 
       // ── GET /api/geocode?query=... ─────────────────────────────────────────
@@ -110,10 +173,16 @@ export default {
         }
 
         const results = await geocode(query.trim(), env)
-        return jsonResponse(results, 200, {
+        const response = jsonResponse(results, 200, {
           ...corsHeaders,
           'Cache-Control': 'public, max-age=86400',
+          'X-Edge-Cache': 'MISS',
         })
+
+        if (cache && ctx) {
+          ctx.waitUntil(cache.put(cacheKey, response.clone()))
+        }
+        return response
       }
 
       // ── GET /api/tiles/:layer/:z/:x/:y ─────────────────────────────────────
@@ -130,7 +199,7 @@ export default {
         if (isOwmAvailable(apiKey)) {
           try {
             const tileUrl = `https://tile.openweathermap.org/map/${layer}/${z}/${x}/${y}.png?appid=${apiKey}`
-            const tileRes = await fetch(tileUrl)
+            const tileRes = await fetch(tileUrl, { signal: AbortSignal.timeout(6000) })
             if (tileRes.status === 401) {
               markOwmFailed()
             } else if (tileRes.ok) {
@@ -145,7 +214,7 @@ export default {
               })
             }
           } catch {
-            // Graceful transparent fallback on network failure
+            // Graceful transparent fallback on network failure or timeout
           }
         }
 
@@ -168,18 +237,29 @@ export default {
       if (historyWeatherMatch) {
         const lat = parseFloat(historyWeatherMatch[1])
         const lon = parseFloat(historyWeatherMatch[2])
+
+        if (!isValidCoordinate(lat, lon)) {
+          return jsonResponse({ error: 'Invalid coordinates' }, 400, corsHeaders)
+        }
+
         const range = url.searchParams.get('range') || '24h'
         const every = url.searchParams.get('every') || '1h'
 
         const data = await queryWeatherHistory(lat, lon, range)
-        return jsonResponse(
+        const response = jsonResponse(
           { lat, lon, range, every, count: data.length, data },
           200,
           {
             ...corsHeaders,
-            'Cache-Control': 'public, max-age=1200',
+            'Cache-Control': 'public, max-age=900',
+            'X-Edge-Cache': 'MISS',
           },
         )
+
+        if (cache && ctx) {
+          ctx.waitUntil(cache.put(cacheKey, response.clone()))
+        }
+        return response
       }
 
       // ── GET /api/history/air-quality/:lat/:lon ─────────────────────────────
@@ -189,18 +269,29 @@ export default {
       if (historyAqiMatch) {
         const lat = parseFloat(historyAqiMatch[1])
         const lon = parseFloat(historyAqiMatch[2])
+
+        if (!isValidCoordinate(lat, lon)) {
+          return jsonResponse({ error: 'Invalid coordinates' }, 400, corsHeaders)
+        }
+
         const range = url.searchParams.get('range') || '24h'
         const every = url.searchParams.get('every') || '1h'
 
         const data = await queryAqiHistory(lat, lon, range)
-        return jsonResponse(
+        const response = jsonResponse(
           { lat, lon, range, every, count: data.length, data },
           200,
           {
             ...corsHeaders,
-            'Cache-Control': 'public, max-age=1200',
+            'Cache-Control': 'public, max-age=900',
+            'X-Edge-Cache': 'MISS',
           },
         )
+
+        if (cache && ctx) {
+          ctx.waitUntil(cache.put(cacheKey, response.clone()))
+        }
+        return response
       }
 
       // ── GET /api/history/export/:lat/:lon ──────────────────────────────────
@@ -210,8 +301,12 @@ export default {
       if (exportMatch) {
         const lat = parseFloat(exportMatch[1])
         const lon = parseFloat(exportMatch[2])
-        const range = url.searchParams.get('range') || '24h'
 
+        if (!isValidCoordinate(lat, lon)) {
+          return jsonResponse({ error: 'Invalid coordinates' }, 400, corsHeaders)
+        }
+
+        const range = url.searchParams.get('range') || '24h'
         const csv = await exportCsv(lat, lon, range)
         return new Response(csv, {
           status: 200,
@@ -219,6 +314,7 @@ export default {
             ...corsHeaders,
             'Content-Type': 'text/csv; charset=utf-8',
             'Content-Disposition': `attachment; filename="climate-${lat.toFixed(2)}_${lon.toFixed(2)}_${range}.csv"`,
+            'Cache-Control': 'public, max-age=900',
           },
         })
       }
@@ -239,7 +335,10 @@ export default {
             monthlyGuard: 9500,
           },
         }
-        return jsonResponse(snapshot, 200, corsHeaders)
+        return jsonResponse(snapshot, 200, {
+          ...corsHeaders,
+          'Cache-Control': 'no-store',
+        })
       }
 
       // ── 404 Route Not Found ────────────────────────────────────────────────

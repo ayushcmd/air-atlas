@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* ── Custom theme tokens ─────────────────────────────────────────────────── */
+@theme {
+  --color-surface: #0f1117;
+  --color-surface-alt: #1a1d2e;
+  --color-surface-hover: #252940;
+  --color-border: #2d3148;
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #38bdf8;
+  --color-accent-hover: #7dd3fc;
+  --color-danger: #f87171;
+  --color-success: #4ade80;
+  --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* ── Base resets ──────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    color-scheme: dark;
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-surface text-text-primary font-sans min-h-screen;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}

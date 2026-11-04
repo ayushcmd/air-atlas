@@ -1,0 +1,16 @@
+# Grafana datasource provisioning — auto-configures InfluxDB on startup.
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    jsonData:
+      version: Flux
+      organization: climate-tracker
+      defaultBucket: climate
+    secureJsonData:
+      token: my-super-secret-token
+    isDefault: true
+    editable: true

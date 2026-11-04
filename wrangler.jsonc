@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "air-atlas-api",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2026-02-01",
+  "observability": {
+    "enabled": true
+  }
+}

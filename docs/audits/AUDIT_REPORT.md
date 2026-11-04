@@ -167,8 +167,8 @@ flowchart TD
 ## 5. Audit Deliverables Index
 
 The complete audit suite is persisted in the following companion reports:
-1. [`GIT_HISTORY_AUDIT.md`](file:///c:/Projects/AYUSHCMD-GITHUB/atlas/GIT_HISTORY_AUDIT.md) — Git ancestry, authorship, and GitHub API forensic verification.
-2. [`SECURITY_AUDIT.md`](file:///c:/Projects/AYUSHCMD-GITHUB/atlas/SECURITY_AUDIT.md) — Threat model, secrets audit, SSRF, CORS, and vulnerability register.
-3. [`PRODUCTION_HEALTH_REPORT.md`](file:///c:/Projects/AYUSHCMD-GITHUB/atlas/PRODUCTION_HEALTH_REPORT.md) — Endpoint verification matrix, headless Chrome console validation, and edge metrics.
-4. [`PERFORMANCE_REPORT.md`](file:///c:/Projects/AYUSHCMD-GITHUB/atlas/PERFORMANCE_REPORT.md) — Bundle sizes, chunk analysis, Three.js canvas lifecycles, and edge latency.
-5. [`BUGS_AND_FIXES.md`](file:///c:/Projects/AYUSHCMD-GITHUB/atlas/BUGS_AND_FIXES.md) — Detailed bug records, reproduction commands, and concrete remediation code.
+1. [`GIT_HISTORY_AUDIT.md`](GIT_HISTORY_AUDIT.md) — Git ancestry, authorship, and GitHub API forensic verification.
+2. [`SECURITY_AUDIT.md`](SECURITY_AUDIT.md) — Threat model, secrets audit, SSRF, CORS, and vulnerability register.
+3. [`PRODUCTION_HEALTH_REPORT.md`](PRODUCTION_HEALTH_REPORT.md) — Endpoint verification matrix, headless Chrome console validation, and edge metrics.
+4. [`PERFORMANCE_REPORT.md`](PERFORMANCE_REPORT.md) — Bundle sizes, chunk analysis, Three.js canvas lifecycles, and edge latency.
+5. [`BUGS_AND_FIXES.md`](BUGS_AND_FIXES.md) — Detailed bug records, reproduction commands, and concrete remediation code.

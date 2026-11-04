@@ -181,6 +181,15 @@ wrangler pages deploy frontend/dist --project-name air-atlas
 
 ---
 
+## 📚 Documentation
+
+Detailed system audits, performance benchmarks, and remediation records are maintained under [`docs/`](docs/README.md):
+
+* **[Documentation Index](docs/README.md)** — Project guide and documentation index.
+* **[Audit Reports](docs/audits/)** — Forensic security, performance, health, and test reports.
+
+---
+
 ## 📜 Attribution & License
 
 Air Atlas is licensed under the [MIT License](LICENSE).

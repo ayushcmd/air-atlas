@@ -42,8 +42,8 @@ coverage/
 
 # Docker
 *.env.docker
-# Local documentation (not tracked)
-docs/
+
+# Local artifacts (not tracked)
 .agents/
 .playwright-mcp/
 skills-lock.json

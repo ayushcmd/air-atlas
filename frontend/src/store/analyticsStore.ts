@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { apiUrl } from '@/config/api'
+import { apiUrl, fetchJson } from '@/config/api'
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
@@ -23,6 +23,10 @@ export interface AqiHistoryPoint {
 export type TimeRange = '1h' | '6h' | '12h' | '24h' | '3d' | '7d' | '14d' | '30d'
 
 export type AnalyticsTab = 'history' | 'grafana'
+
+interface HistoryApiResponse<T> {
+  data: T[]
+}
 
 interface AnalyticsState {
   /* Visibility */
@@ -73,14 +77,12 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
 
     try {
       const [weatherRes, aqiRes] = await Promise.allSettled([
-        fetch(apiUrl(`/api/history/weather/${lat}/${lon}?range=${range}`)).then(async (r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`)
-          return r.json()
-        }),
-        fetch(apiUrl(`/api/history/air-quality/${lat}/${lon}?range=${range}`)).then(async (r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`)
-          return r.json()
-        }),
+        fetchJson<HistoryApiResponse<HistoryPoint>>(
+          apiUrl(`/api/history/weather/${lat}/${lon}?range=${range}`),
+        ),
+        fetchJson<HistoryApiResponse<AqiHistoryPoint>>(
+          apiUrl(`/api/history/air-quality/${lat}/${lon}?range=${range}`),
+        ),
       ])
 
       set({

@@ -2,19 +2,13 @@ import { useEffect, useRef, useCallback } from 'react'
 import { useWeatherStore } from '@/store/weatherStore'
 import type { WeatherData, AirQualityData } from '@/store/weatherStore'
 import { useRealtimeStore } from '@/store/realtimeStore'
-import type { AlertEvent } from '@/store/realtimeStore'
-import { apiUrl } from '@/config/api'
+import type { AlertEvent, WeatherAlert } from '@/store/realtimeStore'
+import { apiUrl, fetchJson } from '@/config/api'
 
 const BROADCAST_INTERVAL = 30_000 // 30 seconds
 
-interface AlertItem {
-  type: string
-  message: string
-  severity: 'warning' | 'critical'
-}
-
 function checkAlerts(lat: number, lon: number, weather: WeatherData, aqi?: AirQualityData | null): AlertEvent | null {
-  const alerts: AlertItem[] = []
+  const alerts: WeatherAlert[] = []
   const temp = weather.current.temp
   const windSpeed = weather.current.wind_speed
 
@@ -79,14 +73,8 @@ export function useSocket() {
     async (lat: number, lon: number) => {
       try {
         const [wRes, aqRes] = await Promise.allSettled([
-          fetch(apiUrl(`/api/weather/${lat}/${lon}`)).then(async (r) => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`)
-            return r.json() as Promise<WeatherData>
-          }),
-          fetch(apiUrl(`/api/air-quality/${lat}/${lon}`)).then(async (r) => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`)
-            return r.json() as Promise<AirQualityData>
-          }),
+          fetchJson<WeatherData>(apiUrl(`/api/weather/${lat}/${lon}`)),
+          fetchJson<AirQualityData>(apiUrl(`/api/air-quality/${lat}/${lon}`)),
         ])
 
         const timestamp = new Date().toISOString()

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { apiUrl } from '@/config/api'
+import { apiUrl, fetchJson } from '@/config/api'
 
 interface UsageData {
   owm: {
@@ -58,8 +58,7 @@ export function ApiUsageBadge() {
 
   useEffect(() => {
     const load = () =>
-      fetch(apiUrl('/api/usage'))
-        .then((r) => (r.ok ? (r.json() as Promise<UsageData>) : Promise.reject()))
+      fetchJson<UsageData>(apiUrl('/api/usage'))
         .then(setData)
         .catch(() => {})
     load()

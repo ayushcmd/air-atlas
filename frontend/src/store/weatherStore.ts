@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { apiUrl } from '@/config/api'
+import { apiUrl, fetchJson } from '@/config/api'
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
 
@@ -78,17 +78,8 @@ export const useWeatherStore = create<WeatherState>((set) => ({
 
     // Fetch weather + AQI concurrently; weather is critical, AQI is best-effort
     const [weatherResult, aqiResult] = await Promise.allSettled([
-      fetch(apiUrl(`/api/weather/${loc.lat}/${loc.lon}`)).then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}))
-          throw new Error(body.message ?? `Weather API error (${res.status})`)
-        }
-        return res.json() as Promise<WeatherData>
-      }),
-      fetch(apiUrl(`/api/air-quality/${loc.lat}/${loc.lon}`)).then(async (res) => {
-        if (!res.ok) throw new Error('AQI unavailable')
-        return res.json() as Promise<AirQualityData>
-      }),
+      fetchJson<WeatherData>(apiUrl(`/api/weather/${loc.lat}/${loc.lon}`)),
+      fetchJson<AirQualityData>(apiUrl(`/api/air-quality/${loc.lat}/${loc.lon}`)),
     ])
 
     if (weatherResult.status === 'fulfilled') {
@@ -98,7 +89,7 @@ export const useWeatherStore = create<WeatherState>((set) => ({
         error:
           weatherResult.reason instanceof Error
             ? weatherResult.reason.message
-            : 'Unknown error',
+            : 'Failed to load weather',
         loading: false,
       })
     }

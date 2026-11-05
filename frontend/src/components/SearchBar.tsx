@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useWeatherStore } from '@/store/weatherStore'
-import { apiUrl } from '@/config/api'
+import { apiUrl, fetchJson } from '@/config/api'
 import { WORLD_CITIES } from '@/data/worldCities'
 
 interface Suggestion {
@@ -61,9 +61,9 @@ export function SearchBar() {
     }
     setLoading(true)
     try {
-      const res = await fetch(apiUrl(`/api/geocode?query=${encodeURIComponent(q)}`))
-      if (!res.ok) throw new Error('Geocode failed')
-      const data: Suggestion[] = await res.json()
+      const data = await fetchJson<Suggestion[]>(
+        apiUrl(`/api/geocode?query=${encodeURIComponent(q)}`),
+      )
       setGeocodeSuggestions(data)
     } catch {
       setGeocodeSuggestions([])

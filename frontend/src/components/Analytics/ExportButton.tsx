@@ -22,8 +22,12 @@ export function ExportButton() {
       const { lat, lon } = selectedLocation
       const url = apiUrl(`/api/history/export/${lat}/${lon}?range=${range}`)
       const res = await fetch(url)
+      const contentType = res.headers.get('content-type') || ''
 
-      if (!res.ok) throw new Error(`Export failed: ${res.status}`)
+      if (!res.ok) throw new Error(`Export failed: HTTP ${res.status}`)
+      if (contentType.includes('text/html')) {
+        throw new Error('Export failed: received HTML page instead of CSV file')
+      }
 
       const blob = await res.blob()
       const blobUrl = URL.createObjectURL(blob)
